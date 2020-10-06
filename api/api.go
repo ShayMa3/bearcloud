@@ -1,8 +1,11 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 	"github.com/gorilla/mux"
+	"encoding/json"
+	"strconv"
 )
 
 
@@ -10,18 +13,16 @@ import (
 //See credentials.go
 
 /*YOUR CODE HERE*/
+var credentials []Credentials = []Credentials{}
 
 
 
 func RegisterRoutes(router *mux.Router) error {
 
 	/*
-
 	Fill out the appropriate get methods for each of the requests, based on the nature of the request.
 
 	Think about whether you're reading, writing, or updating for each request
-
-
 	*/
 
 	router.HandleFunc("/api/getCookie", getCookie).Methods(http.MethodGet)
@@ -46,6 +47,15 @@ func getCookie(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	cookie, err := request.Cookie("access_token")
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusBadRequest)
+	}
+	// if cookie == nil {
+	// 	fmt.Fprintf(response, "")
+	// }
+	accessToken = cookie.Value
+	fmt.Fprintf(response, accessToken)
 }
 
 func getQuery(response http.ResponseWriter, request *http.Request) {
@@ -56,6 +66,12 @@ func getQuery(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	userID := request.URL.Query().Get("userID")
+	// if userID == nil {
+	// 	fmt.Fprintf(response, "")
+	// }
+	fmt.Fprintf(response, userID)
+
 }
 
 func getJSON(response http.ResponseWriter, request *http.Request) {
@@ -76,7 +92,13 @@ func getJSON(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
-	
+	credential := Credentials{}
+	err := json.NewDecoder(request.Body).Decode(&credential)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusBadRequest)
+	}
+	fmt.Fprintf(response, credential.Username + "\n")
+	fmt.Fprintf(response, credential.Password + "\n")
 }
 
 func signup(response http.ResponseWriter, request *http.Request) {
@@ -97,6 +119,12 @@ func signup(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	newCredential := Credentials{}
+	err := json.NewDecoder(request.Body).Decode(&credential)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusBadRequest)
+	}
+	credentials = append(credentials, newCredential)
 }
 
 func getIndex(response http.ResponseWriter, request *http.Request) {
@@ -119,6 +147,21 @@ func getIndex(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	newCredential := Credentials{}
+	err := json.NewDecoder(request.Body).Decode(&credential)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusBadRequest)
+	}
+
+	i := 0
+	for i < len(credentials) {
+		if newCredential.username == credentials[i].username {
+			fmt.Fprintf(response, strconv.Itoa(i)))
+			return
+		}
+		i += 1
+	}
+	fmt.Fprintf(response, "Username does not appear in Credentials")
 }
 
 func getPassword(response http.ResponseWriter, request *http.Request) {
@@ -139,6 +182,9 @@ func getPassword(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	index := getIndex(response, requests)
+	fmt.Fprintf(response, credentials[index].password)
+
 }
 
 
@@ -164,6 +210,15 @@ func updatePassword(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	newCredential := Credentials{}
+	err := json.NewDecoder(request.Body).Decode(&credential)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusBadRequest)
+	}
+
+	index := getIndex(response, request)
+	credentials[index].password = newCredential.password
+
 }
 
 func deleteUser(response http.ResponseWriter, request *http.Request) {
@@ -189,4 +244,19 @@ func deleteUser(response http.ResponseWriter, request *http.Request) {
 	*/
 
 	/*YOUR CODE HERE*/
+	newCredential := Credentials{}
+	err := json.NewDecoder(request.Body).Decode(&credential)
+	if err != nil {
+		http.Error(response, err.Error(), http.StatusBadRequest)
+	}
+
+	index := getIndex(response, request)
+
+	s := make([]Credentials, len(credentials))
+	i := 0
+	for i < len(credentials) {
+		s = append(s, credentials[i])
+	}
+	credentials = append(s[:index], s[index + 1:])
+
 }
