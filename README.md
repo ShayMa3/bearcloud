@@ -1,2 +1,2 @@
 # bearcloud
-A social media platform run on the cloud.
+Demo of Golang and HTTP API
